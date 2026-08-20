@@ -1,0 +1,24 @@
+# DocGate Change Request
+
+- Template version: 1
+- Session: $session_id
+- Round: $round_id
+- Target: $source_path
+- Base SHA-256: $base_hash
+- Receipt path: $receipt_path
+
+$tasks
+
+## Completion contract
+
+1. Edit the target file; a text response alone is not completion.
+2. Return exactly one outcome per active task in `receipt.json`.
+3. `addressed` requires at least one claimed line range backed by a real file change.
+4. Use `clarification` or `blocked` instead of guessing, and explain it in `notes`.
+5. Do not change front matter, unrelated sections, or protected accepted tasks.
+6. `base_hash` must match this brief and `result_hash` must hash the final UTF-8 bytes.
+
+Positive example: `addressed` plus the exact modified line range and a factual summary.
+
+Forbidden example: saying “done” while leaving the file unchanged, omitting a task, or claiming another file.
+

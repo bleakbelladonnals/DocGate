@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "version": "v0.24.2",
+  "git_commit": "9bf46e11f30755b60c0eb392362fce3eaaa1966c",
+  "darwin_arm64_url": "https://github.com/backnotprop/plannotator/releases/download/v0.24.2/plannotator-darwin-arm64",
+  "darwin_arm64_sha256": "d590a1b786b1299a25d228b30d5b97307a73b4f8f3c4ccade59f40b02f89f15d",
+  "verified_command": ".tools/plannotator annotate fixtures/simple.md --gate --json",
+  "stdout_contract": {
+    "decision": "approved|annotated|dismissed",
+    "feedback": "present only for annotated; Plannotator structured Markdown"
+  }
+}
+

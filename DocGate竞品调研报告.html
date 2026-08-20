@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="DocGate 直接与间接竞品调研报告：AI 文档批注、Agent 修改、真实 Diff 与人工验收。">
+  <title>DocGate 竞品调研报告｜AI 文档修改验收</title>
+  <style>
+    :root{
+      --ink:#17211f;--muted:#62706c;--paper:#f6f3ea;--card:#fffdf7;--line:#d9d6ca;
+      --green:#176b55;--green-2:#d9eee6;--red:#ae3f35;--red-2:#f8ded9;--amber:#a76514;
+      --amber-2:#f7e8c7;--blue:#285e89;--blue-2:#dcebf5;--violet:#66508f;--shadow:0 18px 50px rgba(37,48,43,.09);
+      --serif:"Iowan Old Style","Songti SC","Noto Serif CJK SC",serif;
+      --sans:Inter,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    }
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.7 var(--sans)}
+    a{color:inherit;text-decoration-color:#9da7a3;text-underline-offset:3px}a:hover{color:var(--green)}
+    .progress{position:fixed;z-index:40;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--green),#58a387);transition:width .1s}
+    .shell{width:min(1180px,calc(100% - 40px));margin:auto}.hero{padding:76px 0 38px;position:relative;overflow:hidden}
+    .hero:after{content:"DG";position:absolute;right:-18px;top:-84px;font:700 300px/1 var(--serif);color:rgba(23,107,85,.055);pointer-events:none}
+    .eyebrow{font:700 12px/1.3 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--green)}
+    h1,h2,h3{font-family:var(--serif);line-height:1.14;margin:0}h1{font-size:clamp(42px,7vw,88px);letter-spacing:-.055em;max-width:920px;margin:15px 0 18px}
+    h2{font-size:clamp(30px,4.5vw,52px);letter-spacing:-.035em}h3{font-size:22px;letter-spacing:-.02em}
+    .lede{font-size:19px;color:#44514d;max-width:800px;margin:0}.meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px}
+    .pill,.tag{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:6px 11px;background:rgba(255,253,247,.7);font-size:12px;font-weight:650}
+    .pill:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green)}
+    nav{position:sticky;z-index:30;top:0;border-block:1px solid var(--line);background:rgba(246,243,234,.9);backdrop-filter:blur(16px)}
+    .nav-inner{display:flex;gap:6px;overflow:auto;padding:10px 0}.nav-inner a{white-space:nowrap;text-decoration:none;padding:7px 11px;border-radius:8px;font-size:13px;color:var(--muted)}.nav-inner a:hover{background:#fff;color:var(--ink)}
+    section{padding:74px 0;border-bottom:1px solid var(--line)}.section-head{display:grid;grid-template-columns:140px 1fr;gap:24px;align-items:start;margin-bottom:28px}.section-head p{max-width:760px;color:var(--muted);font-size:17px;margin:13px 0 0}
+    .grid{display:grid;gap:16px}.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 1px 0 rgba(255,255,255,.75)}.card p:last-child{margin-bottom:0}
+    .kpi{min-height:170px}.kpi .num{font:700 45px/1 var(--serif);letter-spacing:-.05em;color:var(--green);margin:12px 0}.kpi p{color:var(--muted)}
+    .callout{background:var(--ink);color:#fff;border-radius:24px;padding:28px;display:grid;grid-template-columns:1.7fr 1fr;gap:30px;align-items:center;box-shadow:var(--shadow)}.callout p{color:#c8d1ce}.callout .big{font:700 42px/1.05 var(--serif);text-align:right;color:#95d6be}
+    .flow{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:18px}.node{padding:18px;border:1px solid var(--line);border-radius:16px;background:var(--card);position:relative;min-height:138px}.node:not(:last-child):after{content:"→";position:absolute;right:-17px;top:50%;z-index:2;color:var(--green);font-weight:800}.node b{display:block;margin-bottom:8px}.node small{color:var(--muted)}.node.core{background:var(--green);color:#fff;border-color:var(--green)}.node.core small{color:#d8eee6}
+    .trust{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}.trust .card{border-top-width:5px}.trust .human{border-top-color:var(--blue)}.trust .agent{border-top-color:var(--amber)}.trust .fact{border-top-color:var(--green)}
+    .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}.filter{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 13px;cursor:pointer;color:var(--muted);font:inherit;font-size:13px}.filter.active,.filter:hover{color:#fff;background:var(--ink);border-color:var(--ink)}
+    .competitors{display:grid;gap:14px}.competitor{display:grid;grid-template-columns:70px minmax(0,1.4fr) minmax(230px,1fr);gap:18px;align-items:start}.rank{width:52px;height:52px;border-radius:15px;display:grid;place-items:center;font:700 22px/1 var(--serif);background:var(--green-2);color:var(--green)}
+    .competitor header{display:flex;justify-content:space-between;gap:12px;align-items:start}.competitor h3 a{text-decoration:none}.competitor .summary{color:var(--muted);margin:7px 0 12px}.tags{display:flex;flex-wrap:wrap;gap:6px}.tag{padding:3px 8px;background:#fff;font-size:11px}.tag.danger{background:var(--red-2);border-color:#ecc1ba;color:var(--red)}.tag.warn{background:var(--amber-2);border-color:#ead39e;color:#81500f}.tag.good{background:var(--green-2);border-color:#b9dacd;color:var(--green)}
+    .detail{border-left:1px solid var(--line);padding-left:18px}.detail dl{margin:0}.detail div{margin-bottom:9px}.detail dt{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:700}.detail dd{margin:2px 0 0;font-size:13px}.threat{height:7px;border-radius:999px;background:#e5e2d8;overflow:hidden;margin-top:8px}.threat span{display:block;height:100%;background:linear-gradient(90deg,var(--amber),var(--red));width:var(--w)}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:18px;background:var(--card)}table{border-collapse:collapse;width:100%;min-width:980px}th,td{padding:13px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{position:sticky;top:0;background:#eeeade;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#59645f;z-index:1}td:first-child,th:first-child{position:sticky;left:0;background:var(--card);z-index:2}th:first-child{background:#eeeade}tbody tr:last-child td{border-bottom:0}.yes{color:var(--green);font-weight:800}.some{color:var(--amber);font-weight:800}.no{color:#a6aaa8}.self{background:#eef7f2}.self td:first-child{background:#eef7f2}
+    .legend{font-size:12px;color:var(--muted);margin:10px 2px 0}.landscape{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.landscape .card{position:relative;padding-top:50px}.family{position:absolute;top:18px;left:20px;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--violet)}
+    .product-list{display:grid;gap:10px;margin-top:16px}.product{border-top:1px solid var(--line);padding-top:11px}.product:first-child{border-top:0;padding-top:0}.product strong{display:flex;justify-content:space-between;gap:8px}.product small{color:var(--muted);display:block;margin-top:3px}.product a{text-decoration:none}.model{font:700 10px/1 var(--sans);color:var(--green);border:1px solid #bcd5cc;background:var(--green-2);padding:4px 6px;border-radius:6px;white-space:nowrap}
+    .matrix{display:grid;grid-template-columns:80px repeat(2,1fr);grid-template-rows:54px repeat(2,220px);gap:10px}.axis{display:grid;place-items:center;color:var(--muted);font-size:12px}.quad{border:1px solid var(--line);background:var(--card);border-radius:18px;padding:18px;overflow:auto}.quad h3{font-size:18px}.quad p{font-size:13px;color:var(--muted)}.quad.hot{border-color:#76af99;background:#edf7f2;box-shadow:inset 0 0 0 1px #a8d2c1}.dots{display:flex;flex-wrap:wrap;gap:7px}.dot{background:#fff;border:1px solid var(--line);border-radius:9px;padding:5px 8px;font-size:11px}.axis-y{writing-mode:vertical-rl;transform:rotate(180deg)}
+    .moves{counter-reset:move}.move{display:grid;grid-template-columns:58px 1fr;gap:14px}.move:before{counter-increment:move;content:"0" counter(move);font:700 34px/1 var(--serif);color:#8bb8a7}.move p{color:var(--muted)}
+    .sources{columns:2;column-gap:30px}.source{break-inside:avoid;border-top:1px solid var(--line);padding:10px 0;font-size:13px}.source b{display:block}.source span{color:var(--muted)}
+    .note{border-left:4px solid var(--amber);background:var(--amber-2);padding:15px 18px;border-radius:0 12px 12px 0;color:#60481d}.empty{display:none!important}
+    footer{padding:36px 0 60px;color:var(--muted);font-size:13px}.print{position:fixed;right:22px;bottom:22px;z-index:20;border:0;border-radius:999px;padding:11px 16px;background:var(--ink);color:#fff;box-shadow:var(--shadow);cursor:pointer;font:650 13px var(--sans)}
+    @media(max-width:900px){.g3,.g4{grid-template-columns:1fr 1fr}.flow{grid-template-columns:1fr}.node:not(:last-child):after{content:"↓";right:20px;top:auto;bottom:-18px}.competitor{grid-template-columns:58px 1fr}.detail{grid-column:2;border-left:0;padding-left:0}.landscape{grid-template-columns:1fr}.callout{grid-template-columns:1fr}.callout .big{text-align:left}.section-head{grid-template-columns:1fr}.matrix{grid-template-columns:50px repeat(2,1fr)}}
+    @media(max-width:620px){.shell{width:min(100% - 24px,1180px)}.hero{padding-top:48px}.g2,.g3,.g4,.trust{grid-template-columns:1fr}.competitor{grid-template-columns:1fr}.rank{width:42px;height:42px}.detail{grid-column:1}.sources{columns:1}.matrix{display:block}.axis{display:none}.quad{min-height:auto;margin-bottom:10px}.print{display:none}}
+    @media print{.progress,nav,.toolbar,.print{display:none!important}body{background:#fff;font-size:11px}.shell{width:100%}.hero,section{padding:28px 0}.card,.callout,.table-wrap{box-shadow:none;break-inside:avoid}.competitor{break-inside:avoid}.sources{columns:2}a{text-decoration:none}.callout{background:#eef2ef;color:var(--ink)}.callout p{color:var(--muted)}}
+  </style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <header class="hero">
+    <div class="shell">
+      <div class="eyebrow">Competitive intelligence · 2026.08.20</div>
+      <h1>DocGate<br>竞品与替代路径全景</h1>
+      <p class="lede">围绕“人的批注 → Agent 修改 → 真实文件证据 → 逐任务验收”调研 33 个开源与闭源产品，并从代码审查、法律红线、创意校对、AI 评测和专业格式转换中提炼可迁移机制。</p>
+      <div class="meta"><span class="pill">10 个直接 / 近直接竞品</span><span class="pill">23 个间接竞品与能力替代</span><span class="pill">以官方页面与仓库为主</span><span class="pill">单文件，可离线打开 / 打印</span></div>
+    </div>
+  </header>
+  <nav><div class="shell nav-inner"><a href="#summary">结论</a><a href="#product">项目理解</a><a href="#direct">直接竞品</a><a href="#compare">能力矩阵</a><a href="#indirect">间接竞品</a><a href="#map">竞争地图</a><a href="#strategy">策略建议</a><a href="#sources">来源</a></div></nav>
+
+  <main>
+    <section id="summary"><div class="shell">
+      <div class="section-head"><div class="eyebrow">01 · Executive read</div><div><h2>有强邻居，但核心“验收断层”仍未被占满</h2><p>市场已经快速验证了 AI 计划/文档的可视化批注需求；竞争正在从“给 Agent 留评论”转向“让人控制 Agent 的修改闭环”。DocGate 不该再做一个批注器，而应成为批注器之后的证据与决策层。</p></div></div>
+      <div class="grid g4">
+        <article class="card kpi"><div class="eyebrow">最强入口</div><div class="num">Plannotator</div><p>覆盖计划、Markdown、HTML、代码 Diff 与主流 Agent；分发和使用面最强，也是 DocGate 当前上游。</p></article>
+        <article class="card kpi"><div class="eyebrow">最近体验</div><div class="num">Redline</div><p>本地 Markdown、内联评论、Agent 对话、修订历史与修订后内联 Diff，已逼近完整文档闭环。</p></article>
+        <article class="card kpi"><div class="eyebrow">最强流程</div><div class="num">MD Feedback</div><p>结构化批注、MCP、质量门槛、逐项批准/拒绝和 before/after，控制模型最接近。</p></article>
+        <article class="card kpi"><div class="eyebrow">DocGate 空位</div><div class="num">3-way</div><p>人的任务、Agent 不可信回执、磁盘真实 Diff 三方对账，再加未声明修改与返工范围收敛。</p></article>
+      </div>
+      <div class="callout" style="margin-top:18px"><div><h3>关键判断：DocGate 的直接对手不是 Word，而是“Agent Review Loop”工具</h3><p>Word、Draftable、GitHub PR 和 Filestage 已经教育用户如何看变更、给意见和批准；新一代产品则把这些机制接入本地 Agent。DocGate 需要占据“Agent 说做完之后，如何证明并验收”的位置。</p></div><div class="big">Verify<br>before trust.</div></div>
+      <p class="note" style="margin-top:18px"><b>调研边界：</b>“未发现”指本次查阅的公开官网、官方文档和 README 未展示该能力，不代表产品内部绝对不存在。GitHub Stars 只作开发者注意力快照，不等同于用户量或收入。</p>
+    </div></section>
+
+    <section id="product"><div class="shell">
+      <div class="section-head"><div class="eyebrow">02 · Product model</div><div><h2>项目本质：本地 AI 文档的修改验收门</h2><p>基于仓库 README、MVP PRD、协议和当前前端实现，DocGate 的 P0 不是格式转换、协作发布或自动语义裁决，而是单用户、单工作区、单 Markdown 文件的一轮可靠验收与返工闭环。</p></div></div>
+      <div class="flow">
+        <div class="node"><b>不可变基线</b><small>目标 Markdown、SHA-256、工作区路径与 Round 快照。</small></div>
+        <div class="node"><b>稳定任务</b><small>批注保留 exact quote、prefix/suffix、行号、heading path 与 task_id。</small></div>
+        <div class="node"><b>Agent 执行</b><small>任意 Agent 修改原文件，同时提交结构化 receipt；声明默认不可信。</small></div>
+        <div class="node core"><b>证据对账</b><small>真实行级 Diff、task↔hunk 多对多归因、确定性规则、未声明修改。</small></div>
+        <div class="node"><b>人工决策</b><small>逐任务接受 / 返工 / 澄清；只把未通过项送入下一轮。</small></div>
+      </div>
+      <div class="trust">
+        <article class="card human"><div class="eyebrow">授权来源</div><h3>人的批注</h3><p>说明“允许改什么”，原文和定位证据必须保留。</p></article>
+        <article class="card agent"><div class="eyebrow">解释线索</div><h3>Agent 回执</h3><p>说明“它声称做了什么”，不能直接使任务通过。</p></article>
+        <article class="card fact"><div class="eyebrow">客观事实</div><h3>真实文件 Diff</h3><p>说明“磁盘实际发生了什么”，但开放式语义仍由人判断。</p></article>
+      </div>
+    </div></section>
+
+    <section id="direct"><div class="shell">
+      <div class="section-head"><div class="eyebrow">03 · Direct competitors</div><div><h2>10 个直接 / 近直接竞品</h2><p>筛选标准：目标用户包含 AI Agent 使用者，且至少覆盖“Markdown/计划审阅、结构化反馈、Agent 回流、修改后复核”中的三项。按对当前 DocGate MVP 的威胁度排序。</p></div></div>
+      <div class="toolbar" aria-label="竞品筛选"><button class="filter active" data-filter="all">全部</button><button class="filter" data-filter="local">本地优先</button><button class="filter" data-filter="agent">Agent 集成</button><button class="filter" data-filter="diff">修改后 Diff</button><button class="filter" data-filter="open">开源</button><button class="filter" data-filter="hosted">托管</button></div>
+      <div class="competitors" id="directList">
+        <article class="card competitor" data-tags="local agent diff open"><div class="rank">01</div><div><header><div><h3><a href="https://github.com/backnotprop/plannotator" target="_blank" rel="noreferrer">Plannotator</a></h3><div class="tags"><span class="tag danger">威胁 9.2/10</span><span class="tag good">Apache-2.0</span><span class="tag">7,906 ★</span></div></div></header><p class="summary">本地浏览器审阅面，覆盖计划、规格、Markdown、HTML、代码 Diff 与 PR；通过 hooks/commands 接入 Claude Code、Codex、Gemini CLI 等，批准后继续，拒绝后把结构化反馈返回 Agent，并展示计划修订 Diff。</p><div class="threat" style="--w:92%"><span></span></div></div><div class="detail"><dl><div><dt>最重叠</dt><dd>批注、Agent 回流、批准/拒绝、历史、本地隐私、修改前后审阅。</dd></div><div><dt>公开资料未见</dt><dd>Agent receipt 与真实文件的三方核验；任务↔hunk 归因；未声明修改收件箱；逐任务返工门槛。</dd></div><div><dt>对 DocGate</dt><dd><b>竞合关系。</b>继续作为批注上游，但适配层必须可替换；不能把差异化押在批注 UI。</dd></div></dl></div></article>
+
+        <article class="card competitor" data-tags="local agent diff open"><div class="rank">02</div><div><h3><a href="https://github.com/alevi/redline" target="_blank" rel="noreferrer">Redline</a></h3><div class="tags"><span class="tag danger">威胁 8.8/10</span><span class="tag good">MIT</span><span class="tag">3 ★ · 新项目</span></div><p class="summary">面向 AI 文档的本地 Markdown 内联审阅：选区评论、与 Claude/Codex 在线程中讨论、resolve 后让 Agent 改回磁盘；每轮修订前留历史快照，修订后以内联块级/词级 Diff 展示，最后“Looks good”。</p><div class="threat" style="--w:88%"><span></span></div></div><div class="detail"><dl><div><dt>最重叠</dt><dd>目标用户、源文件、本地优先、锚定评论、Agent 修订、版本快照、修订后 Diff 几乎一致。</dd></div><div><dt>公开资料未见</dt><dd>不可信回执、hash/stale baseline、任务归因置信度、未授权变更隔离、逐条最终决定。</dd></div><div><dt>对 DocGate</dt><dd><b>最危险的产品体验对手。</b>DocGate 必须让“证据卡验收”明显优于它的“阅读全文看红线”。</dd></div></dl></div></article>
+
+        <article class="card competitor" data-tags="local agent diff"><div class="rank">03</div><div><h3><a href="https://github.com/yeominux/md-feedback" target="_blank" rel="noreferrer">MD Feedback</a></h3><div class="tags"><span class="tag danger">威胁 8.4/10</span><span class="tag warn">SUL-1.0 源码可见</span><span class="tag">5 ★</span></div><p class="summary">VS Code + MCP 的 Markdown 计划审阅。Fix / Question / Highlight 以内嵌 HTML comment 保存；Agent 可通过 27 个 MCP tools 读取、应用、标记完成；支持质量门槛、Approve / Reject、外部文件 Diff 和 inline before/after。</p><div class="threat" style="--w:84%"><span></span></div></div><div class="detail"><dl><div><dt>最重叠</dt><dd>稳定批注、逐项状态、MCP、修改前后、人工批准、门槛和跨会话 handoff。</dd></div><div><dt>核心差别</dt><dd>其 gate 主要基于批注解决状态；DocGate 用独立磁盘证据验证 Agent 声明，并暴露未声明 hunk。</dd></div><div><dt>对 DocGate</dt><dd><b>最危险的流程对手。</b>要持续验证其 gate 是否向 hash、归因和未授权变更演进。</dd></div></dl></div></article>
+
+        <article class="card competitor" data-tags="local agent open"><div class="rank">04</div><div><h3><a href="https://github.com/dejuknow/md-redline" target="_blank" rel="noreferrer">md-redline</a></h3><div class="tags"><span class="tag danger">威胁 7.1/10</span><span class="tag good">MIT</span><span class="tag">33 ★</span></div><p class="summary">Markdown 规格/提示词/设计文档的内联评论工具。评论作为不可见 HTML marker 直接写入 .md；内置 MCP 支持 Agent 主动请求审阅并等待，也支持 Agent 给人的文档留下锚定问题。</p><div class="threat" style="--w:71%"><span></span></div></div><div class="detail"><dl><div><dt>最重叠</dt><dd>本地 Markdown、锚点、双向 Agent 审阅、无需复制粘贴、文档仍是事实源。</dd></div><div><dt>短板</dt><dd>更偏批注通道；公开首页未呈现修改证据、任务归因、验收门槛与只返工失败项。</dd></div><div><dt>对 DocGate</dt><dd>可作为 Plannotator 之外的潜在批注适配器；其“Agent 发起并等待”值得吸收。</dd></div></dl></div></article>
+
+        <article class="card competitor" data-tags="local agent diff open"><div class="rank">05</div><div><h3><a href="https://github.com/umputun/revdiff" target="_blank" rel="noreferrer">revdiff</a></h3><div class="tags"><span class="tag warn">威胁 6.6/10</span><span class="tag good">MIT</span><span class="tag">793 ★</span></div><p class="summary">用于 Diff、文件和文档的终端 UI，可做行内批注并向 stdout 输出结构化结果，便于直接管道给 Agent；支持全文件 Diff、词级变化、折叠最终视图、Markdown 目录与多 VCS。</p><div class="threat" style="--w:66%"><span></span></div></div><div class="detail"><dl><div><dt>最重叠</dt><dd>本地、轻量、真实 Diff、结构化批注、Agent 管道、文档与代码通吃。</dd></div><div><dt>短板</dt><dd>没有面向“批注任务是否被完成”的证据模型和状态机，主要是高效看 Diff。</dd></div><div><dt>对 DocGate</dt><dd>构成“用户其实只要普通 Diff”的强反证；DocGate 必须量化逐任务聚合比 TUI 节约多少复核时间。</dd></div></dl></div></article>
+
+        <article class="card competitor" data-tags="local agent open"><div class="rank">06</div><div><h3><a href="https://github.com/jaredhughes/commentary" target="_blank" rel="noreferrer">Commentary</a></h3><div class="tags"><span class="tag warn">威胁 6.2/10</span><span class="tag good">MIT</span><span class="tag">3 ★</span></div><p class="summary">VS Code / Cursor / Windsurf 中对渲染 Markdown 做 Google Docs 式非破坏评论，随后把评论直接 pipe 给 Claude Code、Cursor Agent、Codex 或 Gemini 自动修改文件。</p><div class="threat" style="--w:62%"><span></span></div></div><div class="detail"><dl><div><dt>最重叠</dt><dd>渲染态选区评论、多 Agent、原文件不被评论污染、修改直接落盘。</dd></div><div><dt>短板</dt><dd>官方建议最终用 git diff 检查；评论仍留在侧栏，不提供独立验收证据和接受门槛。</dd></div><div><dt>对 DocGate</dt><dd>证明“批注→Agent”已经组件化；DocGate 应承接其修改后的核验阶段。</dd></div></dl></div></article>
+
+        <article class="card competitor" data-tags="local agent diff open"><div class="rank">07</div><div><h3><a href="https://github.com/bryan-shea/Annotative" target="_blank" rel="noreferrer">Annotative</a></h3><div class="tags"><span class="tag warn">威胁 5.9/10</span><span class="tag good">MIT</span><span class="tag">19 ★</span></div><p class="summary">VS Code 的持久化 AI review artifacts：可审计划、AI 回复和本地 Git Diff；在 section、block、file、hunk 上留下结构化风险/问题/缺失步骤，保存到项目内 .annotative 并导出 AI-ready prompt。</p><div class="threat" style="--w:59%"><span></span></div></div><div class="detail"><dl><div><dt>最重叠</dt><dd>本地持久化、结构化 review artifact、hunk 级评论、open/resolved 状态和导出历史。</dd></div><div><dt>短板</dt><dd>关注“如何整理反馈”，不是“如何证明每条反馈被正确执行”。</dd></div><div><dt>对 DocGate</dt><dd>其项目内可审计 JSON 和多 review 类型可作为协议/扩展设计参考。</dd></div></dl></div></article>
+
+        <article class="card competitor" data-tags="hosted agent diff"><div class="rank">08</div><div><h3><a href="https://github.com/serrendypity/preapp-agent" target="_blank" rel="noreferrer">PreApp</a></h3><div class="tags"><span class="tag warn">威胁 5.7/10</span><span class="tag">托管服务 + MIT 集成层</span><span class="tag">1 ★</span></div><p class="summary">把 Agent 生成的 Markdown/HTML 发布为稳定链接，收集精确反馈，负责人整理 Revision Brief，Agent 按 ID 拉取并发布 v2；公开协议强调反馈不可信和“两阶段授权”。</p><div class="threat" style="--w:57%"><span></span></div></div><div class="detail"><dl><div><dt>最重叠</dt><dd>稳定反馈 ID、locator、Brief、人工授权、版本追溯、Agent 回流与提示注入防护。</dd></div><div><dt>核心差别</dt><dd>它解决外部分享/审阅/发布；DocGate 解决本地文件实际执行结果的可信验收。</dd></div><div><dt>对 DocGate</dt><dd>若未来做团队/分享，会变为高威胁；P0 阶段更适合作为潜在上下游。</dd></div></dl></div></article>
+
+        <article class="card competitor" data-tags="local agent open"><div class="rank">09</div><div><h3><a href="https://github.com/lucassmatos/pocketspec" target="_blank" rel="noreferrer">pocketspec</a></h3><div class="tags"><span class="tag">威胁 4.4/10</span><span class="tag good">MIT</span><span class="tag">1 ★</span></div><p class="summary">让用户在手机上阅读 AI 生成的文档/规格，点击段落评论；评论落到 .comments sidecar，Agent 再读取并修订。局域网零配置，锚点失效时降级为 general comment 而不丢数据。</p><div class="threat" style="--w:44%"><span></span></div></div><div class="detail"><dl><div><dt>最重叠</dt><dd>Markdown、Agent skill、锚定反馈、本地数据、source of truth 不搬家。</dd></div><div><dt>短板</dt><dd>移动阅读/评论通道，不提供执行回执、Diff 归因或验收状态机。</dd></div><div><dt>对 DocGate</dt><dd>“离开电脑也能批注”的切入很轻；DocGate 移动端可只做验收卡，不必复制桌面长文。</dd></div></dl></div></article>
+
+        <article class="card competitor" data-tags="local agent diff open"><div class="rank">10</div><div><h3><a href="https://github.com/kunchenguid/lavish-axi" target="_blank" rel="noreferrer">lavish-axi</a></h3><div class="tags"><span class="tag">威胁 4.1/10</span><span class="tag good">MIT</span><span class="tag">2,892 ★</span></div><p class="summary">本地审阅 Agent 生成的交互 HTML：精确元素/文本批注、Mermaid 白板编辑、反馈队列、Agent long-poll；内置布局诊断收件箱，问题只有在新 revision 同 viewport 复检通过后才算 resolved。</p><div class="threat" style="--w:41%"><span></span></div></div><div class="detail"><dl><div><dt>最重叠</dt><dd>本地 Agent 闭环、精确 target、问题 inbox、重新验证、未修复/复发/无法验证状态。</dd></div><div><dt>核心差别</dt><dd>对象是 HTML 视觉与布局，不是 Markdown 修改任务和文件语义证据。</dd></div><div><dt>对 DocGate</dt><dd>其“不能凭 Agent 说修好，必须下一版本复检”的状态设计与 DocGate 高度同构。</dd></div></dl></div></article>
+      </div>
+    </div></section>
+
+    <section id="compare"><div class="shell">
+      <div class="section-head"><div class="eyebrow">04 · Capability matrix</div><div><h2>能力不是有没有 Diff，而是 Diff 能否回答任务</h2><p>直接竞品大多已经有批注、Agent 回流或视觉 Diff；稀缺的是把客观变化重新归因到原任务，并阻止“Agent 自报完成”替代人工验收。</p></div></div>
+      <div class="table-wrap"><table aria-label="直接竞品能力矩阵"><thead><tr><th>产品</th><th>渲染批注</th><th>Agent 直连</th><th>修改后 Diff</th><th>稳定任务状态</th><th>独立确定性核验</th><th>未声明修改</th><th>逐任务最终决定</th><th>只返工未通过项</th></tr></thead><tbody>
+        <tr class="self"><td><b>DocGate</b></td><td><span class="some">△</span> 复用上游</td><td><span class="yes">●</span> 回执协议</td><td><span class="yes">●</span> 磁盘快照</td><td><span class="yes">●</span> task_id</td><td><span class="yes">●</span> hash/规则</td><td><span class="yes">●</span> 独立 inbox</td><td><span class="yes">●</span> 三种决定</td><td><span class="yes">●</span> rework brief</td></tr>
+        <tr><td><b>Plannotator</b></td><td><span class="yes">●</span></td><td><span class="yes">●</span></td><td><span class="yes">●</span> 计划/代码</td><td><span class="some">△</span></td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="some">△</span> 总体</td><td><span class="some">△</span></td></tr>
+        <tr><td><b>Redline</b></td><td><span class="yes">●</span></td><td><span class="yes">●</span></td><td><span class="yes">●</span> 块/词</td><td><span class="some">△</span> comment</td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="some">△</span> resolve/总体</td><td><span class="no">—</span></td></tr>
+        <tr><td><b>MD Feedback</b></td><td><span class="yes">●</span></td><td><span class="yes">●</span> MCP</td><td><span class="yes">●</span> inline</td><td><span class="yes">●</span></td><td><span class="some">△</span> 状态 gate</td><td><span class="no">—</span></td><td><span class="yes">●</span></td><td><span class="some">△</span></td></tr>
+        <tr><td><b>md-redline</b></td><td><span class="yes">●</span></td><td><span class="yes">●</span> MCP</td><td><span class="no">—</span></td><td><span class="some">△</span> marker</td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="some">△</span></td><td><span class="no">—</span></td></tr>
+        <tr><td><b>revdiff</b></td><td><span class="some">△</span> TUI</td><td><span class="some">△</span> stdout</td><td><span class="yes">●</span></td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="some">△</span> 看得到</td><td><span class="no">—</span></td><td><span class="no">—</span></td></tr>
+        <tr><td><b>Commentary</b></td><td><span class="yes">●</span></td><td><span class="yes">●</span></td><td><span class="some">△</span> 外部 git</td><td><span class="some">△</span></td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="no">—</span></td><td><span class="no">—</span></td></tr>
+        <tr><td><b>Annotative</b></td><td><span class="some">△</span></td><td><span class="some">△</span> 导出</td><td><span class="yes">●</span> git</td><td><span class="yes">●</span></td><td><span class="no">—</span></td><td><span class="some">△</span> 可评论</td><td><span class="some">△</span> open/resolved</td><td><span class="no">—</span></td></tr>
+        <tr><td><b>PreApp</b></td><td><span class="yes">●</span></td><td><span class="yes">●</span> CLI/MCP</td><td><span class="some">△</span> 版本</td><td><span class="yes">●</span> ID/brief</td><td><span class="some">△</span> 授权 gate</td><td><span class="no">—</span></td><td><span class="yes">●</span> 先筛选</td><td><span class="yes">●</span> brief</td></tr>
+        <tr><td><b>lavish-axi</b></td><td><span class="yes">●</span> HTML</td><td><span class="yes">●</span></td><td><span class="some">△</span> live reload</td><td><span class="yes">●</span> layout issue</td><td><span class="yes">●</span> 布局复检</td><td><span class="some">△</span> issue inbox</td><td><span class="some">△</span></td><td><span class="yes">●</span> queue selected</td></tr>
+      </tbody></table></div>
+      <p class="legend"><span class="yes">●</span> 公开资料明确具备　<span class="some">△</span> 部分具备/依赖外部流程　<span class="no">—</span> 本次公开资料未见。矩阵比较的是当前公开能力，不是对产品质量的总评分。</p>
+    </div></section>
+
+    <section id="indirect"><div class="shell">
+      <div class="section-head"><div class="eyebrow">05 · Indirect competitors</div><div><h2>23 个间接竞品与机制替代</h2><p>它们可能抢走预算、替代一个关键步骤，或已经在别的行业把“专业制品转成普通人可读、可批、可批准的表面”做成熟。每组都标出 DocGate 真正应该借的东西。</p></div></div>
+      <div class="landscape">
+        <article class="card"><div class="family">A · 代码变更审查</div><h3>把不可读 patch 变成有门槛的决策界面</h3><p>这是 DocGate 最接近的成熟范式：base/head、hunk、inline comment、request changes、required approval、重新提交后保留上下文。</p><div class="product-list">
+          <div class="product"><strong><a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/reviewing-changes-in-pull-requests/about-pull-request-reviews" target="_blank" rel="noreferrer">GitHub Pull Request Reviews</a><span class="model">闭源 SaaS</span></strong><small>逐行评论、Approve / Comment / Request changes、分支保护与 required review。借鉴：决策语言和“未满足门槛不能合并”。</small></div>
+          <div class="product"><strong><a href="https://docs.gitlab.com/user/project/merge_requests/approvals/" target="_blank" rel="noreferrer">GitLab Merge Request Approvals</a><span class="model">开放核心 + 商业</span></strong><small>审批规则、指定审批者、推送新 commit 后重置审批。借鉴：新事实出现时旧批准失效，避免 stale acceptance。</small></div>
+          <div class="product"><strong><a href="https://www.reviewable.io/" target="_blank" rel="noreferrer">Reviewable</a><span class="model">闭源 SaaS</span></strong><small>智能行映射避免 rebase 后重审，Flexible Mergeability 控制合并。借鉴：跨版本保留“已看过”状态，减少重复阅读。</small></div>
+          <div class="product"><strong><a href="https://www.corgreview.com/" target="_blank" rel="noreferrer">CorgReview</a><span class="model">闭源本地工具</span></strong><small>把 GitHub PR 式本地 Diff、blocker/question/suggestion 和结构化 Markdown 反馈接给 Agent。借鉴：Agent 完成任务后自动触发自审。</small></div>
+          <div class="product"><strong><a href="https://github.com/in-the-loop-labs/pair-review" target="_blank" rel="noreferrer">pair-review</a><span class="model">Apache-2.0 · 52 ★</span></strong><small>本地 GitHub 风格 AI 代码审查，人工可采纳/编辑/丢弃 AI 建议。借鉴：把 AI 分析降级为辅助提示，不替代人的结论。</small></div>
+        </div></article>
+
+        <article class="card"><div class="family">B · 文档红线与比较</div><h3>把专业文件差异压缩成可导航的变化清单</h3><p>这组会抢“我只是想看两版差异”的用户；同时证明变化摘要、过滤和视觉层次本身能显著降低复核成本。</p><div class="product-list">
+          <div class="product"><strong><a href="https://support.microsoft.com/en-us/office/track-changes-in-word-197ba630-0f5f-4a8e-9a77-3712475e806a" target="_blank" rel="noreferrer">Microsoft Word Track Changes / Compare</a><span class="model">商业软件</span></strong><small>接受/拒绝单项或全部修改、评论、作者归属与修订视图。借鉴：改变的“状态”必须与改变本身同屏。</small></div>
+          <div class="product"><strong><a href="https://www.draftable.com/compare" target="_blank" rel="noreferrer">Draftable</a><span class="model">闭源 SaaS / 企业</span></strong><small>Word/PDF/PPT/TXT/Excel 的 side-by-side、redline、变化列表和同步滚动。借鉴：按变化类型过滤和点击变化直达位置。</small></div>
+          <div class="product"><strong><a href="https://www.adobe.com/acrobat/features/compare-pdfs.html" target="_blank" rel="noreferrer">Adobe Acrobat Compare</a><span class="model">商业软件</span></strong><small>PDF 视觉对比，可按文本、图像、页眉页脚、格式过滤，自动生成变化数量摘要。借鉴：首页先给风险摘要，再让用户下钻。</small></div>
+        </div></article>
+
+        <article class="card"><div class="family">C · 创意校对与批准</div><h3>把分散反馈变成明确的版本和审批队列</h3><p>设计、视频、包装与营销团队早已为“反复看、反复改、意见散落”付费。它们争夺的是同一笔复核时间成本。</p><div class="product-list">
+          <div class="product"><strong><a href="https://filestage.io/file-proofing/" target="_blank" rel="noreferrer">Filestage</a><span class="model">闭源 SaaS</span></strong><small>跨文件类型的 annotation、review/approval workflow、版本与自动化，并用 Review Agents 按品牌/法规即时检查。借鉴：规则检查应可解释且独立于人工批准。</small></div>
+          <div class="product"><strong><a href="https://www.ziflow.com/blog/what-is-online-proofing" target="_blank" rel="noreferrer">Ziflow</a><span class="model">闭源 SaaS</span></strong><small>在线 proofing 将创意内容、批注、版本和审批集中。借鉴：每个 round 要有明确 owner、截止状态和版本边界。</small></div>
+          <div class="product"><strong><a href="https://frame.io/review-and-approval" target="_blank" rel="noreferrer">Frame.io Review & Approval</a><span class="model">闭源 SaaS</span></strong><small>视频/创意的 frame-accurate comment、版本和审批。借鉴：文档 locator 应像 timecode 一样稳定、可复现、可在新版本迁移但不能偷换。</small></div>
+        </div></article>
+
+        <article class="card"><div class="family">D · AI 输出评测</div><h3>把海量运行轨迹分发给人做结构化判断</h3><p>对象从“文档”换成“模型运行”，但同样需要采样、排队、标签、多人一致性和人工最终判断。</p><div class="product-list">
+          <div class="product"><strong><a href="https://docs.langchain.com/langsmith/annotation-queues" target="_blank" rel="noreferrer">LangSmith Annotation Queues</a><span class="model">闭源 SaaS</span></strong><small>单运行/成对运行排队、reviewer reservation、阈值、评论和 requeue。借鉴：高风险任务优先、uncertain 进入专门队列、需要时重新排队。</small></div>
+          <div class="product"><strong><a href="https://docs.langchain.com/langsmith/annotate-traces-inline" target="_blank" rel="noreferrer">LangSmith Inline Trace Annotation</a><span class="model">闭源 SaaS</span></strong><small>不仅评价根运行，还能对中间 span 留分数、标签和注释。借鉴：任务证据应允许下钻到规则、hunk 和 locator，而不是只给一个总分。</small></div>
+        </div></article>
+
+        <article class="card"><div class="family">E · 高风险执行审批</div><h3>先展示计划，再由人决定是否执行</h3><p>基础设施领域把“声明要做什么”和“实际应用什么”分为两个阶段，并用 stale plan、policy 和 approval 保护高成本变更。</p><div class="product-list">
+          <div class="product"><strong><a href="https://developer.hashicorp.com/terraform/cli/run" target="_blank" rel="noreferrer">Terraform plan / apply</a><span class="model">源码可用 + 商业</span></strong><small>plan 先生成变更预览，apply 再执行；保存的 plan 让审批对象固定。借鉴：DocGate 的 baseline + result 快照就是文档世界的 plan/apply 边界。</small></div>
+          <div class="product"><strong><a href="https://www.runatlantis.io/" target="_blank" rel="noreferrer">Atlantis</a><span class="model">Apache-2.0</span></strong><small>把 Terraform plan 放进 PR，通过评论命令和审批后 apply。借鉴：机器执行必须绑定被人看过的具体版本，过期就拒绝。</small></div>
+        </div></article>
+
+        <article class="card"><div class="family">F · 专业格式转换</div><h3>把机器/行业格式变成可读、可复用的中间形态</h3><p>这组不是验收产品，但会决定 DocGate 将来是否扩展到 Word/PDF/科研文档，以及应复用什么而不是重造什么。</p><div class="product-list">
+          <div class="product"><strong><a href="https://github.com/jgm/pandoc" target="_blank" rel="noreferrer">Pandoc</a><span class="model">GPL-2.0+ · 45,943 ★</span></strong><small>通用 markup converter，支持 docx、JATS、DocBook、Markdown 等。借鉴：格式转换做成 adapter；canonical source 和审阅证据不要绑定渲染器。</small></div>
+          <div class="product"><strong><a href="https://github.com/quarto-dev/quarto-cli" target="_blank" rel="noreferrer">Quarto</a><span class="model">开源 · 5,947 ★</span></strong><small>基于 Pandoc 的科研/技术发布系统，把代码、结果、引用、交叉引用转成网站、书和报告。借鉴：专业语义要保留结构 ID，而不只是纯文本。</small></div>
+          <div class="product"><strong><a href="https://github.com/microsoft/markitdown" target="_blank" rel="noreferrer">Microsoft MarkItDown</a><span class="model">MIT · 174,717 ★</span></strong><small>把 PDF、Office、图片、音频、HTML 等转成保留结构的 Markdown，主要供 LLM 消费。借鉴：可做未来输入归一化，但不能承诺人类高保真 round-trip。</small></div>
+          <div class="product"><strong><a href="https://github.com/docling-project/docling" target="_blank" rel="noreferrer">Docling</a><span class="model">MIT · 65,236 ★</span></strong><small>把复杂文档解析成适合 GenAI 的结构化表示。借鉴：PDF/Office 扩展应将“解析置信度”显式带入任务证据。</small></div>
+          <div class="product"><strong><a href="https://github.com/opendatalab/MinerU" target="_blank" rel="noreferrer">MinerU</a><span class="model">开源 · 77,998 ★</span></strong><small>复杂 PDF/Office 到 LLM-ready Markdown/JSON。借鉴：专业格式→可读中间态已经高度商品化，DocGate 的价值仍应在变更控制和验收。</small></div>
+        </div></article>
+
+        <article class="card"><div class="family">G · AI 制品呈现与编辑</div><h3>减少“AI 输出不好看、分享难、局部改很贵”</h3><p>这组替代的是生成→阅读→反馈的前半程。它们增长快，却也证明“转换/渲染”本身难成为 DocGate 壁垒。</p><div class="product-list">
+          <div class="product"><strong><a href="https://github.com/nexu-io/html-anything" target="_blank" rel="noreferrer">html-anything</a><span class="model">Apache-2.0 · 8,349 ★</span></strong><small>Agentic HTML editor，覆盖报告、演示、海报、社媒卡片等输出面。借鉴：让 Agent 负责丰富呈现，但将展示层视为可重建产物。</small></div>
+          <div class="product"><strong><a href="https://github.com/markrahq/markra" target="_blank" rel="noreferrer">Markra</a><span class="model">AGPL-3.0 · 757 ★</span></strong><small>本地优先 AI 原生 WYSIWYG Markdown 编辑器。借鉴：不要和成熟编辑器争编辑体验，提供可被它们调用的验收协议。</small></div>
+          <div class="product"><strong><a href="https://github.com/code2rich/jpage" target="_blank" rel="noreferrer">即页 jpage</a><span class="model">MIT · 174 ★</span></strong><small>HTML/Markdown 秒级预览分享、稳定短链、版本、回滚、权限和 MCP。借鉴：未来分享是独立产品面，不要塞进 P0 本地验收。</small></div>
+        </div></article>
+      </div>
+    </div></section>
+
+    <section id="map"><div class="shell">
+      <div class="section-head"><div class="eyebrow">06 · Positioning map</div><div><h2>竞争地图：从“看得见”到“信得过”</h2><p>横轴是 Agent 工作流融合程度，纵轴是客观验证与接受门槛的强度。大部分文档工具停在展示/批注；代码与基础设施工具验证强，但不是面向长文档任务。DocGate 的目标象限足够清晰。</p></div></div>
+      <div class="matrix">
+        <div></div><div class="axis">弱 Agent 集成</div><div class="axis">强 Agent 集成 →</div>
+        <div class="axis axis-y">强验证 / 门槛 ↑</div><div class="quad"><h3>成熟控制，但不懂文档 Agent</h3><p>事实对象明确、审批门槛强。</p><div class="dots"><span class="dot">GitHub PR</span><span class="dot">GitLab MR</span><span class="dot">Terraform</span><span class="dot">Atlantis</span><span class="dot">Draftable</span></div></div><div class="quad hot"><h3>DocGate 目标象限</h3><p>Agent 深度接入 + 独立文件证据 + 人工决定。</p><div class="dots"><span class="dot"><b>DocGate</b></span><span class="dot">MD Feedback（靠近）</span><span class="dot">Lavish layout gate（垂直子集）</span><span class="dot">Redline（体验靠近）</span></div></div>
+        <div class="axis axis-y">弱验证 / 门槛</div><div class="quad"><h3>展示、转换与协作</h3><p>让内容更可读，但不证明修改完成。</p><div class="dots"><span class="dot">Word</span><span class="dot">Acrobat</span><span class="dot">Filestage</span><span class="dot">Pandoc</span><span class="dot">Quarto</span></div></div><div class="quad"><h3>Agent 批注与反馈通道</h3><p>意见能回到 Agent，但验收仍靠人全文看。</p><div class="dots"><span class="dot">Plannotator</span><span class="dot">Commentary</span><span class="dot">md-redline</span><span class="dot">pocketspec</span><span class="dot">PreApp</span></div></div>
+      </div>
+    </div></section>
+
+    <section id="strategy"><div class="shell">
+      <div class="section-head"><div class="eyebrow">07 · Strategic moves</div><div><h2>建议：把“验收证据层”做窄、做硬、做成协议</h2><p>短期不应追逐富文本、分享、团队协作和多格式。最值得投入的是别人公开产品中还没有形成统一心智、但一旦做成就可横向适配多种批注器与 Agent 的证据闭环。</p></div></div>
+      <div class="grid g2 moves">
+        <article class="card move"><div><h3>对外定位改成“AI 文档修改验收”</h3><p>“中间件”是技术形态，不是用户价值。首页第一屏直接展示：Agent 说完成 ≠ 真实完成；DocGate 逐条证明、只返工失败项。</p></div></article>
+        <article class="card move"><div><h3>把 Plannotator 定义为上游，不做替身</h3><p>公开 adapter interface 和 tasks/receipt/evidence schema；优先再接一个 md-redline/Commentary 风格输入，证明核心不依赖单一批注器。</p></div></article>
+        <article class="card move"><div><h3>把“未声明修改”做成招牌功能</h3><p>在演示里故意注入 Agent 顺手重写、改错同名段落、声称完成但无变化、会话外改文件；这是与所有批注工具最容易一眼看懂的差异。</p></div></article>
+        <article class="card move"><div><h3>任务卡先回答结论，再展开证据</h3><p>借鉴 PR / Acrobat / Draftable：默认显示风险摘要和可决策信息；hunk、hash、rule_id、locator 作为可下钻证据，避免用户面对另一堵 Diff 墙。</p></div></article>
+        <article class="card move"><div><h3>建立“新事实使旧批准失效”规则</h3><p>借鉴 GitLab 和 Terraform：结果 hash、源文件或相关 hunk 变化后，旧人工决定不能静默沿用；必须明确 stale 并要求重审受影响任务。</p></div></article>
+        <article class="card move"><div><h3>用对照实验验证是否真省时间</h3><p>同一文档、同一批注、同一 Agent 输出，让用户分别用 git diff/revdiff、Redline、DocGate 验收；记录耗时、漏检、错误接受和返工轮数。</p></div></article>
+      </div>
+      <div class="grid g3" style="margin-top:16px">
+        <article class="card"><div class="eyebrow">现在不要做</div><h3>批注 UI</h3><p>Plannotator、Redline、Commentary、md-redline 已密集覆盖；继续自研只会进入同质化。</p></article>
+        <article class="card"><div class="eyebrow">现在不要做</div><h3>Word / PDF 全格式</h3><p>Pandoc、MarkItDown、Docling、MinerU 可作为未来 adapter；P0 先把 Markdown 证据模型跑通。</p></article>
+        <article class="card"><div class="eyebrow">持续监控</div><h3>Redline + MD Feedback</h3><p>一旦它们补上独立磁盘验证、未声明变更和返工门槛，DocGate 的窗口会显著收窄。</p></article>
+      </div>
+    </div></section>
+
+    <section id="sources"><div class="shell">
+      <div class="section-head"><div class="eyebrow">08 · Sources & method</div><div><h2>来源、口径与可复核性</h2><p>调研日期为 2026-08-20。产品能力优先取自官方官网、官方文档和 GitHub README；开源元数据来自 GitHub Repository API 快照。报告没有以第三方“最佳工具榜单”作为关键事实依据。</p></div></div>
+      <div class="sources">
+        <div class="source"><b>项目内部资料</b><span>README.md；docs/01-产品需求文档-DocGate-MVP.md；docs/02-技术适配声明.md；当前验收页与 TaskCard 实现。</span></div>
+        <div class="source"><b><a href="https://github.com/backnotprop/plannotator">Plannotator</a></b><span>官方 README、安装/隐私说明、计划与代码审阅工作流。</span></div>
+        <div class="source"><b><a href="https://github.com/alevi/redline">Redline</a></b><span>官方 README：评论线程、修订、历史快照、块/词级 Diff。</span></div>
+        <div class="source"><b><a href="https://github.com/yeominux/md-feedback">MD Feedback</a></b><span>官方 README：MCP、quality gates、Approve/Reject、inline diff。</span></div>
+        <div class="source"><b><a href="https://github.com/dejuknow/md-redline">md-redline</a></b><span>官方 README：HTML markers、双向 MCP review。</span></div>
+        <div class="source"><b><a href="https://github.com/umputun/revdiff">revdiff</a></b><span>官方 README：TUI、结构化 stdout、全文与词级 Diff。</span></div>
+        <div class="source"><b><a href="https://github.com/jaredhughes/commentary">Commentary</a> · <a href="https://github.com/bryan-shea/Annotative">Annotative</a></b><span>官方 README 与公开功能说明。</span></div>
+        <div class="source"><b><a href="https://github.com/serrendypity/preapp-agent">PreApp Agent</a></b><span>官方 README 与 protocol docs：stable links、Revision Brief、two-stage feedback gate。</span></div>
+        <div class="source"><b><a href="https://github.com/lucassmatos/pocketspec">pocketspec</a> · <a href="https://github.com/kunchenguid/lavish-axi">lavish-axi</a></b><span>官方 README 与公开工作流。</span></div>
+        <div class="source"><b><a href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/reviewing-changes-in-pull-requests/about-pull-request-reviews">GitHub PR Reviews</a> · <a href="https://docs.gitlab.com/user/project/merge_requests/approvals/">GitLab Approvals</a> · <a href="https://www.reviewable.io/">Reviewable</a></b><span>官方文档/官网。</span></div>
+        <div class="source"><b><a href="https://www.draftable.com/compare">Draftable</a> · <a href="https://www.adobe.com/acrobat/features/compare-pdfs.html">Adobe Acrobat Compare</a></b><span>官方产品页：side-by-side、redline、change list、filter 和 summary。</span></div>
+        <div class="source"><b><a href="https://filestage.io/file-proofing/">Filestage</a> · <a href="https://www.ziflow.com/blog/what-is-online-proofing">Ziflow</a> · <a href="https://frame.io/review-and-approval">Frame.io</a></b><span>官方产品/说明页面。</span></div>
+        <div class="source"><b><a href="https://docs.langchain.com/langsmith/annotation-queues">LangSmith Annotation Queues</a> · <a href="https://docs.langchain.com/langsmith/annotate-traces-inline">Inline Annotation</a></b><span>官方文档。</span></div>
+        <div class="source"><b><a href="https://developer.hashicorp.com/terraform/cli/run">Terraform workflow</a> · <a href="https://www.runatlantis.io/">Atlantis</a></b><span>官方文档/官网。</span></div>
+        <div class="source"><b><a href="https://github.com/jgm/pandoc">Pandoc</a> · <a href="https://github.com/quarto-dev/quarto-cli">Quarto</a> · <a href="https://github.com/microsoft/markitdown">MarkItDown</a></b><span>官方 README 与 GitHub metadata。</span></div>
+        <div class="source"><b><a href="https://github.com/docling-project/docling">Docling</a> · <a href="https://github.com/opendatalab/MinerU">MinerU</a></b><span>官方 README 与 GitHub metadata。</span></div>
+      </div>
+      <p class="note" style="margin-top:24px"><b>许可证提醒：</b>本报告中的“开源/源码可见”是市场分类，不构成法律意见。MD Feedback 使用 SUL-1.0，Markra 使用 AGPL-3.0；Pandoc、Quarto、MinerU 等也有各自许可边界。真正复用代码前应再次核对仓库 LICENSE 与依赖许可证。</p>
+    </div></section>
+  </main>
+
+  <footer><div class="shell">DocGate 竞品调研报告 · 生成于 2026-08-20 · 适用于当前 MVP 定义<br>结论用于产品定位和验证优先级，不代表市场规模、采购或法律判断。</div></footer>
+  <button class="print" type="button" onclick="window.print()">打印 / 导出 PDF</button>
+  <script>
+    const progress=document.getElementById('progress');
+    addEventListener('scroll',()=>{const h=document.documentElement;progress.style.width=(100*h.scrollTop/(h.scrollHeight-h.clientHeight))+'%'});
+    const buttons=[...document.querySelectorAll('.filter')],cards=[...document.querySelectorAll('#directList .competitor')];
+    buttons.forEach(b=>b.addEventListener('click',()=>{buttons.forEach(x=>x.classList.remove('active'));b.classList.add('active');const f=b.dataset.filter;cards.forEach(c=>c.classList.toggle('empty',f!=='all'&&!c.dataset.tags.split(' ').includes(f)))}));
+  </script>
+</body>
+</html>

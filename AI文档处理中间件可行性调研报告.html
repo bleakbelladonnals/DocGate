@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>AI 文档处理中间件｜可行性调研报告</title>
+  <style>
+    :root{
+      --ink:#14201f;--muted:#687370;--paper:#f3f1ea;--card:#fffdf8;
+      --line:#d9ddd5;--green:#0f7657;--green2:#31a477;--mint:#d8efe3;
+      --orange:#e77a39;--orange-soft:#f9e1d1;--red:#b64b43;--blue:#326a83;
+      --navy:#142b2c;--shadow:0 16px 48px rgba(24,47,42,.10);
+      --radius:20px;--serif:"Songti SC","Noto Serif SC",Georgia,serif;
+      --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);line-height:1.72;font-size:15px}
+    a{color:var(--green);text-decoration-thickness:1px;text-underline-offset:3px}
+    a:hover{color:var(--orange)}
+    .progress{position:fixed;inset:0 auto auto 0;height:3px;width:0;background:linear-gradient(90deg,var(--orange),var(--green2));z-index:99}
+    .shell{width:min(1180px,calc(100% - 40px));margin:auto}
+    .hero{background:var(--navy);color:#f7f5ed;padding:64px 0 54px;position:relative;overflow:hidden}
+    .hero:before,.hero:after{content:"";position:absolute;border-radius:50%;filter:blur(1px);opacity:.9}
+    .hero:before{width:460px;height:460px;background:radial-gradient(circle,rgba(49,164,119,.32),transparent 66%);right:-80px;top:-170px}
+    .hero:after{width:360px;height:360px;background:radial-gradient(circle,rgba(231,122,57,.24),transparent 68%);left:-110px;bottom:-200px}
+    .eyebrow{display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:#a8d8c2;font-weight:700}
+    .eyebrow:before{content:"";width:30px;height:2px;background:var(--orange)}
+    h1{font-family:var(--serif);font-size:clamp(38px,6.2vw,74px);line-height:1.08;letter-spacing:-.035em;margin:22px 0 18px;max-width:920px;font-weight:800}
+    .hero-lead{max-width:810px;color:#c6d1cc;font-size:18px;margin:0 0 34px}
+    .hero-meta{display:flex;gap:10px;flex-wrap:wrap}
+    .pill{padding:7px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.055);font-size:12px;color:#dfe8e4}
+    .verdict-strip{margin-top:-28px;position:relative;z-index:3}
+    .verdict{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:24px;display:grid;grid-template-columns:150px 1fr 210px;gap:24px;align-items:center}
+    .score{width:120px;height:120px;border-radius:50%;display:grid;place-items:center;margin:auto;background:conic-gradient(var(--green) 0 65%,#e6e6df 65% 100%);position:relative}
+    .score:after{content:"";position:absolute;inset:10px;background:var(--card);border-radius:50%}
+    .score strong{font-family:var(--serif);font-size:32px;z-index:1}.score small{font-size:12px;z-index:1;color:var(--muted);margin-top:42px;position:absolute}
+    .verdict h2{font-size:24px;margin:0 0 6px}.verdict p{margin:0;color:var(--muted)}
+    .decision{display:grid;gap:8px}.decision span{display:block;padding:9px 12px;border-radius:10px;font-size:13px;font-weight:700}
+    .go{background:var(--mint);color:#07583f}.nogo{background:var(--orange-soft);color:#893d18}
+    nav{margin:28px 0 34px;display:flex;gap:8px;flex-wrap:wrap}
+    nav a{background:rgba(255,255,255,.72);border:1px solid var(--line);border-radius:999px;padding:7px 12px;text-decoration:none;color:#42504c;font-size:13px}
+    main{padding-bottom:70px}
+    section{scroll-margin-top:22px;margin:58px 0}
+    .section-kicker{font-size:12px;color:var(--orange);font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+    h2.section-title{font-family:var(--serif);font-size:34px;line-height:1.2;margin:5px 0 9px}
+    .section-intro{color:var(--muted);max-width:820px;margin:0 0 24px}
+    .grid{display:grid;gap:16px}.grid-3{grid-template-columns:repeat(3,1fr)}.grid-2{grid-template-columns:repeat(2,1fr)}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 5px 18px rgba(24,47,42,.035)}
+    .card h3{font-size:17px;margin:0 0 8px}.card p{margin:0;color:var(--muted);font-size:14px}
+    .metric{font-family:var(--serif);font-size:34px;color:var(--green);line-height:1.1;margin-bottom:6px;font-weight:800}
+    .metric.orange{color:var(--orange)}
+    .platform{position:relative;padding-top:27px}.platform .tag{position:absolute;top:0;left:0;border-radius:15px 0 9px 0;background:var(--navy);color:#fff;padding:5px 12px;font-size:11px;font-weight:800;letter-spacing:.08em}
+    .signal{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);font-size:13px;color:#46524f}.signal b{color:var(--ink)}
+    .quote{background:#e8eee9;border-left:4px solid var(--green);border-radius:0 12px 12px 0;padding:18px 20px;font-family:var(--serif);font-size:20px;line-height:1.55;margin:24px 0}.quote cite{display:block;font-family:var(--sans);font-size:12px;color:var(--muted);font-style:normal;margin-top:9px}
+    .bar-list{display:grid;gap:13px;margin-top:20px}.bar-row{display:grid;grid-template-columns:155px 1fr 62px;align-items:center;gap:12px;font-size:13px}.bar-track{height:10px;background:#e1e4dd;border-radius:999px;overflow:hidden}.bar-fill{height:100%;width:var(--w);border-radius:999px;background:linear-gradient(90deg,var(--green),var(--green2))}.bar-row:nth-child(2n) .bar-fill{background:linear-gradient(90deg,var(--orange),#f2a366)}
+    .table-wrap{overflow:auto;border-radius:16px;border:1px solid var(--line);background:var(--card)}
+    table{border-collapse:collapse;width:100%;min-width:780px;font-size:13px}th{background:#e9ece5;text-align:left;color:#4b5754;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:11px 14px}td{padding:12px 14px;border-top:1px solid #e7e9e3;vertical-align:top}td strong{font-size:14px}.stars{font-weight:800;color:var(--orange);white-space:nowrap}
+    .status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--green2)}
+    .status-dot.yellow{background:#e5a33b}.status-dot.red{background:var(--red)}
+    .matrix{display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:12px;align-items:stretch}.matrix .card{display:flex;flex-direction:column;justify-content:center}.matrix .core{background:var(--navy);color:#fff;border-color:var(--navy);text-align:center;padding:28px}.matrix .core p{color:#c6d1cc}.arrow{display:none}
+    .flow{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;align-items:stretch;margin-top:20px}.node{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;min-height:126px;position:relative}.node:not(:last-child):after{content:"→";position:absolute;right:-12px;top:48px;color:var(--orange);font-size:19px;font-weight:800;z-index:2}.node b{display:block;margin-bottom:6px}.node small{color:var(--muted)}.node.highlight{background:var(--mint);border-color:#93c7ac}
+    .callout{background:linear-gradient(130deg,#183b36,#102b2c);color:#fff;border-radius:20px;padding:26px;display:grid;grid-template-columns:1fr auto;gap:26px;align-items:center;margin:24px 0}.callout h3{font-family:var(--serif);font-size:25px;margin:0 0 7px}.callout p{color:#bed0c9;margin:0}.callout .big{font-family:var(--serif);font-size:42px;font-weight:800;color:#f4a06e;white-space:nowrap}
+    .timeline{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.week{position:relative;padding-top:48px}.week:before{content:attr(data-week);position:absolute;top:14px;left:20px;color:var(--green);font-size:12px;font-weight:800;letter-spacing:.1em}.week ul{padding-left:18px;margin:8px 0 0}.week li{margin:5px 0;color:var(--muted);font-size:13px}
+    .risk{display:grid;grid-template-columns:36px 1fr;gap:10px}.risk .num{width:32px;height:32px;border-radius:9px;background:var(--orange-soft);color:#91451f;display:grid;place-items:center;font-weight:800}.risk h3{margin:1px 0 4px}.risk p{font-size:13px}
+    .check{list-style:none;padding:0;margin:0;display:grid;gap:8px}.check li{position:relative;padding-left:25px;color:#45514e;font-size:14px}.check li:before{content:"✓";position:absolute;left:0;color:var(--green);font-weight:900}.check.kill li:before{content:"×";color:var(--red)}
+    .sources{columns:2;column-gap:30px}.source-item{break-inside:avoid;margin:0 0 10px;padding:10px 12px;background:rgba(255,255,255,.55);border-radius:9px;font-size:12px}.source-item b{display:block;color:#26322f}.source-item a{word-break:break-all}
+    footer{background:#e6e6df;border-top:1px solid var(--line);padding:25px 0 40px;color:var(--muted);font-size:12px}
+    .print-btn{position:fixed;right:18px;bottom:18px;border:0;border-radius:999px;padding:11px 15px;background:var(--navy);color:white;box-shadow:var(--shadow);cursor:pointer;font-weight:700;z-index:10}.print-btn:hover{background:var(--green)}
+    @media(max-width:900px){.verdict{grid-template-columns:110px 1fr}.decision{grid-column:1/-1;grid-template-columns:1fr 1fr}.score{width:100px;height:100px}.grid-3,.timeline{grid-template-columns:1fr 1fr}.flow{grid-template-columns:1fr 1fr}.node:not(:last-child):after{display:none}.matrix{grid-template-columns:1fr}.sources{columns:1}}
+    @media(max-width:620px){body{font-size:14px}.shell{width:min(100% - 24px,1180px)}.hero{padding:44px 0 48px}h1{font-size:39px}.hero-lead{font-size:16px}.verdict{grid-template-columns:1fr;text-align:center;padding:20px}.decision{grid-template-columns:1fr}.grid-3,.grid-2,.timeline,.flow{grid-template-columns:1fr}.bar-row{grid-template-columns:110px 1fr 50px;gap:8px}.callout{grid-template-columns:1fr}.callout .big{font-size:32px}.sources{columns:1}.print-btn{display:none}}
+    @media print{.progress,nav,.print-btn{display:none}.hero{padding:35px 0;background:#17302f!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.verdict-strip{margin-top:15px}.card,.table-wrap{break-inside:avoid;box-shadow:none}section{margin:32px 0}.shell{width:100%;max-width:none}a{color:inherit;text-decoration:none}}
+  </style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <header class="hero">
+    <div class="shell">
+      <div class="eyebrow">Market scan · 2026 / 08 / 19</div>
+      <h1>AI 文档处理中间件<br>可行性调研报告</h1>
+      <p class="hero-lead">从 Reddit、X、V2EX、Linux.do、小红书与 GitHub 的公开讨论出发，判断“机器友好的源文件”与“人类可读、可改、可审阅交付物”之间是否存在产品机会。</p>
+      <div class="hero-meta">
+        <span class="pill">5 个社区平台</span><span class="pill">25+ GitHub 项目</span><span class="pill">直接阅读帖子与评论</span><span class="pill">Stars 为调研日快照</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div class="verdict-strip">
+      <div class="verdict">
+        <div class="score"><strong>6.5</strong><small>/ 10</small></div>
+        <div>
+          <h2>条件性可行：需求成立，泛化产品不成立</h2>
+          <p>“再做一个 Markdown/HTML 编辑器”已经拥挤；“Agent 文档制品控制层”仍有机会，尤其是稳定身份、版本、审批、反馈回写和企业 Word 交付。</p>
+        </div>
+        <div class="decision"><span class="go">GO：窄场景闭环 MVP</span><span class="nogo">NO-GO：通用阅读编辑器</span></div>
+      </div>
+    </div>
+
+    <nav aria-label="章节导航">
+      <a href="#signals">市场信号</a><a href="#platforms">平台证据</a><a href="#landscape">竞品格局</a><a href="#gap">机会缺口</a><a href="#architecture">产品架构</a><a href="#mvp">MVP 路线</a><a href="#risks">风险与验证</a><a href="#sources">来源</a>
+    </nav>
+
+    <section id="signals">
+      <div class="section-kicker">01 · Executive signals</div>
+      <h2 class="section-title">这不是格式之争，而是工作流断层</h2>
+      <p class="section-intro">社区的分歧表面上是 Markdown 与 HTML 谁更好，底层其实是“机器层”和“人类决策层”被迫共用同一种格式。</p>
+      <div class="grid grid-3">
+        <article class="card"><div class="metric">4.4M</div><h3>X 趋势帖浏览量</h3><p>Anthropic 团队成员提出“HTML is the new markdown”，约 1.2 万赞，说明趋势已经破圈。</p></article>
+        <article class="card"><div class="metric orange">5,089</div><h3>Linux.do 主题浏览</h3><p>HTML 替代 Markdown 的主题累计约 321 赞、151 帖，token、diff 与安全成为核心争论。</p></article>
+        <article class="card"><div class="metric">919</div><h3>小红书 HTML 编辑器获赞</h3><p>“AI 写的 HTML 改到崩溃”获得约 137 条评论，真实诉求集中在直接编辑、图片、拖拽、协作和隐私。</p></article>
+      </div>
+      <div class="quote">Markdown 是 archive / source，HTML 是 decision surface。<cite>Reddit 用户对 Agent 报告工作流的总结；代表性观点，不等同于行业统计。</cite></div>
+      <div class="bar-list" aria-label="机会评分">
+        <div class="bar-row"><span>痛点强度</span><div class="bar-track"><div class="bar-fill" style="--w:85%"></div></div><b>8.5</b></div>
+        <div class="bar-row"><span>市场时机</span><div class="bar-track"><div class="bar-fill" style="--w:90%"></div></div><b>9.0</b></div>
+        <div class="bar-row"><span>技术可行</span><div class="bar-track"><div class="bar-fill" style="--w:88%"></div></div><b>8.8</b></div>
+        <div class="bar-row"><span>差异化空间</span><div class="bar-track"><div class="bar-fill" style="--w:45%"></div></div><b>4.5</b></div>
+        <div class="bar-row"><span>消费端付费</span><div class="bar-track"><div class="bar-fill" style="--w:40%"></div></div><b>4.0</b></div>
+        <div class="bar-row"><span>企业端付费</span><div class="bar-track"><div class="bar-fill" style="--w:68%"></div></div><b>6.8</b></div>
+      </div>
+    </section>
+
+    <section id="platforms">
+      <div class="section-kicker">02 · Community evidence</div>
+      <h2 class="section-title">跨平台讨论呈现出同一组痛点</h2>
+      <p class="section-intro">下面区分了需求信号与反向证据。大量帖子来自工具作者和 AI 早期用户，因此能证明问题存在，但不能直接证明大规模付费意愿。</p>
+      <div class="grid grid-3">
+        <article class="card platform"><span class="tag">REDDIT</span><h3>长报告不被阅读</h3><p>2,000 行 Markdown 计划难以消化；管理者抱怨未经人工校对的 AI 文档与重复通读成本。</p><div class="signal"><b>反证：</b>HTML token 更多、diff 不可读，任意脚本存在安全风险。</div></article>
+        <article class="card platform"><span class="tag">X</span><h3>HTML 输出趋势爆发</h3><p>高传播帖子推动“HTML 给人看”的观念；中文讨论迅速提出内容与展示分离。</p><div class="signal"><b>启示：</b>趋势不是“保存 HTML”，而是把 HTML 作为可重建视图。</div></article>
+        <article class="card platform"><span class="tag">V2EX</span><h3>产品原型密集出现</h3><p>PreApp、jpage、Markra、Muselab 已分别覆盖分享反馈、托管版本、所见即所得与项目聚合。</p><div class="signal"><b>风险：</b>PreApp 早期 3 个注册者首次发布为 0，说明 onboarding 才是硬仗。</div></article>
+        <article class="card platform"><span class="tag">LINUX.DO</span><h3>需求强，付费弱</h3><p>讨论密度高，用户需要好看的 MD/HTML 阅读体验，也出现了跨项目聚合器。</p><div class="signal"><b>反证：</b>社区明确认为纯阅读器不是硬需求、门槛低、容易复制。</div></article>
+        <article class="card platform"><span class="tag">小红书</span><h3>非技术用户更在意交付</h3><p>Markdown 发给同事打不开、HTML 初版易改版难、Word 企业排版复杂，均引发高互动。</p><div class="signal"><b>付费线索：</b>企业模板、页眉页脚、审阅与隐私比“好看”更接近预算。</div></article>
+        <article class="card platform"><span class="tag">GITHUB</span><h3>基础组件已经商品化</h3><p>Pandoc、Docling、Tiptap、BlockNote、Milkdown 等足以覆盖转换与编辑内核。</p><div class="signal"><b>策略：</b>不重造编辑器；竞争重点应是身份、状态、版本和闭环协议。</div></article>
+      </div>
+    </section>
+
+    <section id="landscape">
+      <div class="section-kicker">03 · Competitive landscape</div>
+      <h2 class="section-title">最危险的竞品已经覆盖“生成—审阅—回写”</h2>
+      <p class="section-intro">Stars 是 2026-08-19 的公开快照，仅代表开发者关注度。直接竞品增长非常快，泛化窗口正在收窄。</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>项目</th><th>Stars</th><th>已覆盖</th><th>尚未形成的统一能力</th><th>判断</th></tr></thead>
+          <tbody>
+            <tr><td><strong><a href="https://github.com/nexu-io/html-anything" target="_blank" rel="noreferrer">html-anything</a></strong></td><td class="stars">8,339</td><td>多种输入生成 HTML / PNG，模板与多平台发布</td><td>稳定文档身份、企业审阅与源文件语义回写</td><td><span class="status-dot red"></span>高威胁</td></tr>
+            <tr><td><strong><a href="https://github.com/backnotprop/plannotator" target="_blank" rel="noreferrer">Plannotator</a></strong></td><td class="stars">7,891</td><td>MD / HTML / 计划 / 代码 diff 审阅、批注、Agent 反馈</td><td>通用报告生命周期与 DOCX 企业交付</td><td><span class="status-dot red"></span>高威胁</td></tr>
+            <tr><td><strong><a href="https://github.com/kunchenguid/lavish-axi" target="_blank" rel="noreferrer">lavish-axi</a></strong></td><td class="stars">2,880</td><td>本地 HTML Artifact、精确元素批注、Agent 回写</td><td>跨格式源模型与团队级文档注册表</td><td><span class="status-dot red"></span>高威胁</td></tr>
+            <tr><td><strong><a href="https://github.com/Achuan-2/pandoc_docx_template" target="_blank" rel="noreferrer">pandoc_docx_template</a></strong></td><td class="stars">1,027</td><td>Markdown 按模板输出 Word，支持 Agent Skill</td><td>审阅、版本、修改回流</td><td><span class="status-dot yellow"></span>能力组件</td></tr>
+            <tr><td><strong><a href="https://github.com/markrahq/markra" target="_blank" rel="noreferrer">Markra</a></strong></td><td class="stars">754</td><td>本地优先 AI 原生 WYSIWYG Markdown 编辑</td><td>跨团队审阅与稳定交付链接</td><td><span class="status-dot yellow"></span>相邻竞品</td></tr>
+            <tr><td><strong><a href="https://github.com/code2rich/jpage" target="_blank" rel="noreferrer">jpage</a></strong></td><td class="stars">174</td><td>HTML/MD 预览、分享、版本、权限、自托管、MCP</td><td>精确批注与 Agent 修改授权</td><td><span class="status-dot yellow"></span>可集成</td></tr>
+            <tr><td><strong><a href="https://github.com/serrendypity/preapp-agent" target="_blank" rel="noreferrer">PreApp Agent</a></strong></td><td class="stars">1</td><td>稳定链接、版本、精确反馈、Agent 回流</td><td>开源服务端与市场验证</td><td><span class="status-dot"></span>理念最接近</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout"><div><h3>不要把壁垒建立在“渲染 Markdown”上</h3><p>转换、富文本编辑、HTML 沙箱、图表和导出都已有成熟组件。真正稀缺的是：同一份制品从生成到批准的可追溯状态机。</p></div><div class="big">Control Plane</div></div>
+    </section>
+
+    <section id="gap">
+      <div class="section-kicker">04 · Opportunity gap</div>
+      <h2 class="section-title">建议重新定义：Agent 文档制品控制层</h2>
+      <p class="section-intro">面向市场时不要强调“中间件”。用户更容易理解的价值是：AI 文档不再散落，每次修改可追踪，意见可以准确回到 Agent。</p>
+      <div class="matrix">
+        <div class="card"><h3>机器层</h3><p>Markdown / YAML / block AST<br>便宜、可 grep、可 diff、适合上下文重用</p></div>
+        <div class="card core"><h3>Artifact Registry</h3><p>稳定 ID · 来源 · 版本 · 审批状态 · 引用关系 · 反馈授权 · 导出记录</p></div>
+        <div class="card"><h3>人类层</h3><p>HTML 决策界面 / DOCX / PDF<br>阅读、批注、审批、分享、企业交付</p></div>
+      </div>
+      <div class="grid grid-3" style="margin-top:16px">
+        <article class="card"><h3>稳定身份</h3><p>每份报告一个 artifact ID 和链接，发布 v2/v3 不再新增“最终版-最终版2.html”。</p></article>
+        <article class="card"><h3>语义回写</h3><p>人的修改成为带 source locator 的 patch；Agent 只修改批准项，不重写整个页面。</p></article>
+        <article class="card"><h3>企业交付</h3><p>同一源内容确定性渲染为品牌 HTML、固定 DOCX 模板与 PDF，而不是让模型重复排版。</p></article>
+      </div>
+    </section>
+
+    <section id="architecture">
+      <div class="section-kicker">05 · Product architecture</div>
+      <h2 class="section-title">正确的源—视图—反馈闭环</h2>
+      <p class="section-intro">任意 HTML、Markdown、DOCX 之间无法保证无损双向转换。产品必须明确一个 canonical source，HTML 只是可丢弃、可重建的展示层。</p>
+      <div class="flow">
+        <div class="node"><b>Agent 输出</b><small>报告、研究、技术方案、周报；保留生成来源与运行 ID。</small></div>
+        <div class="node highlight"><b>Canonical Source</b><small>Markdown + metadata，后续可升级为 block AST。</small></div>
+        <div class="node"><b>Deterministic Render</b><small>模板和脚本生成 HTML / DOCX / PDF，不消耗主模型 token。</small></div>
+        <div class="node"><b>Human Review</b><small>阅读、批注、局部修改、批准或拒绝反馈。</small></div>
+        <div class="node highlight"><b>Semantic Patch</b><small>反馈 ID + 版本 + locator 回到 Agent，人工授权后执行。</small></div>
+      </div>
+      <div class="grid grid-2" style="margin-top:16px">
+        <article class="card"><h3>必须本地优先</h3><p>小红书评论直接询问“后台能否看到文件”；报告、标书与客户材料天然敏感。默认本地运行，托管分享应是显式动作。</p></article>
+        <article class="card"><h3>必须把反馈视为不可信数据</h3><p>评论可能包含提示注入。Agent 只能读取、展示反馈 ID 并停止，直到人类选择哪些项目可以应用。</p></article>
+      </div>
+    </section>
+
+    <section id="mvp">
+      <div class="section-kicker">06 · MVP plan</div>
+      <h2 class="section-title">四周只验证一条完整链路</h2>
+      <p class="section-intro">目标不是功能覆盖，而是验证团队是否真的把第二轮审阅从微信、Slack、截图和复制粘贴迁移进产品。</p>
+      <div class="timeline">
+        <article class="card week" data-week="WEEK 01"><h3>稳定发布</h3><ul><li>CLI / Skill 发布 Markdown</li><li>稳定 artifact ID 与链接</li><li>文件监听与版本快照</li></ul></article>
+        <article class="card week" data-week="WEEK 02"><h3>精确审阅</h3><ul><li>渲染阅读界面</li><li>划选批注与段落定位</li><li>v1 → v2 内容 diff</li></ul></article>
+        <article class="card week" data-week="WEEK 03"><h3>Agent 回写</h3><ul><li>反馈 ID 与安全扫描</li><li>人工选择批准项</li><li>应用 patch 并重新发布</li></ul></article>
+        <article class="card week" data-week="WEEK 04"><h3>企业交付</h3><ul><li>一个 DOCX 模板</li><li>PDF 导出</li><li>10 个真实团队陪跑</li></ul></article>
+      </div>
+      <div class="grid grid-2" style="margin-top:16px">
+        <div class="card"><h3>必须做</h3><ul class="check"><li>首次发布低于 2 分钟</li><li>稳定链接和版本历史</li><li>源段落精确定位</li><li>人工批准后 Agent 才修改</li><li>本地存储与安全沙箱</li></ul></div>
+        <div class="card"><h3>明确不做</h3><ul class="check kill"><li>自研完整富文本编辑器</li><li>任意 HTML 无损转回 Markdown</li><li>Figma 式自由画布</li><li>多人实时 CRDT</li><li>内置模型与聊天框</li></ul></div>
+      </div>
+    </section>
+
+    <section id="risks">
+      <div class="section-kicker">07 · Risks & validation</div>
+      <h2 class="section-title">最大的风险不是技术，而是“看起来需要”</h2>
+      <div class="grid grid-2">
+        <article class="card risk"><div class="num">1</div><div><h3>使用频率不足</h3><p>一次性报告只需要导出 PDF；只有反复审阅的报告才需要控制层。</p></div></article>
+        <article class="card risk"><div class="num">2</div><div><h3>首次发布摩擦</h3><p>安装 Skill、认证、选择文件、理解稳定链接，任何一步都可能让用户流失。</p></div></article>
+        <article class="card risk"><div class="num">3</div><div><h3>竞品高速迭代</h3><p>Plannotator、Lavish 与 html-anything 已覆盖大量相邻能力，泛化功能没有窗口。</p></div></article>
+        <article class="card risk"><div class="num">4</div><div><h3>格式回写失真</h3><p>HTML/CSS/JS 和 DOCX 均含展示语义，必须避免承诺任意格式的完美 round-trip。</p></div></article>
+      </div>
+      <div class="callout"><div><h3>两周验证标准</h3><p>找 10 个真实团队，不问“喜不喜欢”，只看是否发布第二份文档、是否邀请审阅者、是否发生第二轮修改。</p></div><div class="big">10 teams</div></div>
+      <div class="grid grid-2">
+        <div class="card"><h3>继续投入</h3><ul class="check"><li>至少 6 人一周内发布第二份文档</li><li>至少一半文档分享给另一人</li><li>至少 30% 文档发生第二轮修改</li><li>3 个团队愿付 $20–50 / 月</li></ul></div>
+        <div class="card"><h3>立即止损</h3><ul class="check kill"><li>主要用途只是 Markdown Viewer</li><li>绝大多数文档没有审阅者</li><li>用户仍用微信和截图反馈</li><li>最想要的只是更多漂亮模板</li></ul></div>
+      </div>
+    </section>
+
+    <section id="sources">
+      <div class="section-kicker">08 · Sources</div>
+      <h2 class="section-title">代表性来源与数据边界</h2>
+      <p class="section-intro">本报告基于公开页面的定向样本，不是全量社交媒体爬虫结果。平台推荐、登录状态与自推广内容会造成偏差；互动量只能证明关注度，不能直接等同于付费需求。</p>
+      <div class="sources">
+        <div class="source-item"><b>Reddit · HTML instead of Markdown</b><a href="https://www.reddit.com/r/ClaudeCode/comments/1tkcci7/html_instead_of_markdown/" target="_blank" rel="noreferrer">reddit.com/r/ClaudeCode/…</a></div>
+        <div class="source-item"><b>Reddit · HTML &gt; Markdown discussion</b><a href="https://www.reddit.com/r/ClaudeCode/comments/1t8vni3/html_markdown_for_claude_code_outputs_thariqs/" target="_blank" rel="noreferrer">reddit.com/r/ClaudeCode/…</a></div>
+        <div class="source-item"><b>Reddit · Agent reports</b><a href="https://www.reddit.com/r/AgentsOfAI/comments/1towgdx/my_ai_agent_delivered_solid_reports_for_months_i/" target="_blank" rel="noreferrer">reddit.com/r/AgentsOfAI/…</a></div>
+        <div class="source-item"><b>X · Thariq</b><a href="https://x.com/trq212/status/2052811606032269638" target="_blank" rel="noreferrer">x.com/trq212/status/2052811606032269638</a></div>
+        <div class="source-item"><b>X · 内容与展示分离</b><a href="https://x.com/dotey/status/2052930530329460881" target="_blank" rel="noreferrer">x.com/dotey/status/2052930530329460881</a></div>
+        <div class="source-item"><b>V2EX · PreApp</b><a href="https://www.v2ex.com/t/1228051" target="_blank" rel="noreferrer">v2ex.com/t/1228051</a></div>
+        <div class="source-item"><b>V2EX · jpage</b><a href="https://www.v2ex.com/t/1218514" target="_blank" rel="noreferrer">v2ex.com/t/1218514</a></div>
+        <div class="source-item"><b>V2EX · Markra</b><a href="https://www.v2ex.com/t/1224360" target="_blank" rel="noreferrer">v2ex.com/t/1224360</a></div>
+        <div class="source-item"><b>Linux.do · HTML 替代 Markdown</b><a href="https://linux.do/t/topic/2138856" target="_blank" rel="noreferrer">linux.do/t/topic/2138856</a></div>
+        <div class="source-item"><b>Linux.do · 阅读器构想</b><a href="https://linux.do/t/topic/2285347" target="_blank" rel="noreferrer">linux.do/t/topic/2285347</a></div>
+        <div class="source-item"><b>Linux.do · Word 文档讨论</b><a href="https://linux.do/t/topic/2616741" target="_blank" rel="noreferrer">linux.do/t/topic/2616741</a></div>
+        <div class="source-item"><b>小红书 · AI 写的 HTML 改到崩溃</b><a href="https://www.xiaohongshu.com/explore/6a2631620000000021020262" target="_blank" rel="noreferrer">xiaohongshu.com/explore/6a263162…</a></div>
+        <div class="source-item"><b>小红书 · HTML 方便改吗</b><a href="https://www.xiaohongshu.com/explore/69c16fe5000000002800bbd3" target="_blank" rel="noreferrer">xiaohongshu.com/explore/69c16fe5…</a></div>
+        <div class="source-item"><b>小红书 · Word 真正排版</b><a href="https://www.xiaohongshu.com/explore/69fe9f23000000003601ffc1" target="_blank" rel="noreferrer">xiaohongshu.com/explore/69fe9f23…</a></div>
+        <div class="source-item"><b>小红书 · Markdown 转 Word Skill</b><a href="https://www.xiaohongshu.com/explore/6a0999ec00000000080022c3" target="_blank" rel="noreferrer">xiaohongshu.com/explore/6a0999ec…</a></div>
+      </div>
+    </section>
+  </main>
+
+  <button class="print-btn" type="button" onclick="window.print()">打印 / 导出 PDF</button>
+  <footer><div class="shell">AI 文档处理中间件可行性调研 · 单文件 HTML · 生成日期 2026-08-19<br>结论用于产品方向判断，不构成市场规模或投资承诺。</div></footer>
+  <script>
+    const bar=document.getElementById('progress');
+    const update=()=>{const h=document.documentElement;const max=h.scrollHeight-h.clientHeight;bar.style.width=(max?100*h.scrollTop/max:0)+'%'};
+    addEventListener('scroll',update,{passive:true});update();
+  </script>
+</body>
+</html>

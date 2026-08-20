@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "adapter": "generic",
+  "annotations": [
+    {"id":"a1","instruction":"Add a concrete retention statement.","exact_quote":"The current workflow keeps every baseline immutable for later review."},
+    {"id":"a2","instruction":"Name all three evidence types.","exact_quote":"The verification view separates agent claims from objective file diffs."},
+    {"id":"a3","instruction":"Clarify that API restarts are covered.","exact_quote":"Every human decision survives a browser refresh and a service restart."},
+    {"id":"a4","instruction":"Explain who must decide unrelated changes.","exact_quote":"Unrelated changes appear in a dedicated unattributed change inbox."},
+    {"id":"a5","instruction":"Make the acceptance gate explicit.","exact_quote":"A session is accepted only after every task and stray change has a decision."}
+  ]
+}
+

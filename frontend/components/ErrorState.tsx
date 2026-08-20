@@ -1,0 +1,1 @@
+export function ErrorState({message,onRetry}:{message:string;onRetry?:()=>void}){return <div className="error" role="alert"><strong>无法加载</strong><p>{message}</p>{onRetry&&<button className="button secondary" onClick={onRetry}>重试</button>}</div>}

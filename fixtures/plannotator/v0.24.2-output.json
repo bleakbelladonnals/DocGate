@@ -1,0 +1,4 @@
+{
+  "decision": "annotated",
+  "feedback": "# File Feedback\n\nI've reviewed this file and have 5 pieces of feedback:\n\n## 1. Feedback on: \"Every human decision survives a browser refresh and a service restart.\"\n> Clarify that API restarts are covered.\n\n## 2. Feedback on: \"Unrelated changes appear in a dedicated unattributed change inbox.\"\n> Explain who must decide unrelated changes.\n\n## 3. Feedback on: \"A session is accepted only after every task and stray change has a decision.\"\n> Make the acceptance gate explicit.\n\n## 4. (line 5) Feedback on: \"The current workflow keeps every baseline immutable for later review.\"\n> Add a concrete retention statement.\n\n## 5. (line 9) Feedback on: \"The verification view separates agent claims from objective file diffs.\"\n> Name all three evidence types.\n\n---\n"
+}
