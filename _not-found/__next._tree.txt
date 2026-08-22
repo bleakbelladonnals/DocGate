@@ -1,2 +1,2 @@
-:HL["/DocGate/_next/static/chunks/1y_fo0xaku4_1.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":4192,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}},"staleTime":300,"buildId":"nAXJs8_veEgIE4g93bBhY"}
+:HL["/DocGate/_next/static/chunks/0ccnf5opcest9.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"/_not-found","param":null,"prefetchHints":4192,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}},"staleTime":300,"buildId":"iz4BdPhYc_9QTbI0Lfeji"}
